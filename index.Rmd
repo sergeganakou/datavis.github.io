@@ -1,0 +1,10 @@
+---
+title: "My Homepage"
+---
+
+My homepage is here
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
