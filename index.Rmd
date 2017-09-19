@@ -1,10 +1,1600 @@
 ---
-title: "My Homepage"
+title: "Untitled"
+runtime: shiny
+output: flexdashboard::flex_dashboard
 ---
 
-My homepage is here
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+
+```{r, include=FALSE}
+
+if (!require(shiny)){install.packages("shiny")} ;library(shiny)
+if (!require(shinydashboard)){install.packages("shinydashboard")} ;library(shinydashboard)
+if (!require(DT)){install.packages("DT")} ;library(DT)
+if (!require(devtools)){install.packages("devtools")} ;library(devtools)
+if (!require(rCharts)){install.packages("rCharts")} ;library(rCharts)
+if (!require(lubridate)){install.packages("lubridate")} ;library(lubridate)
+if (!require(plotly)){install.packages("plotly")} ;library(plotly)
+if (!require(dplyr)){install.packages("dplyr")} ;library(dplyr)
+if (!require(corrplot)){install.packages("corrplot")} ;library(corrplot)
+if (!require(ggplot2)){install.packages("ggplot2")} ;library(ggplot2)
+if (!require(rmarkdown)){install.packages("rmarkdown")} ;library(rmarkdown)
+if (!require(knitr)){install.packages("knitr")} ;library(knitr)
+if (!require(prettyR)){install.packages("prettyR")} ;library(prettyR)
+if (!require(mgcv)){install.packages("prettyR")} ;library(mgcv)
+if (!require(texreg)){install.packages("texreg")} ;library(texreg)
+if (!require(ReporteRs)){install.packages("ReporteRs")} ;library(ReporteRs)
+if (!require(R.oo)){install.packages("R.oo")} ;library(R.oo)
+if (!require(R.methodsS3)){install.packages("R.methodsS3")} ;library(R.methodsS3)
+if (!require(stringr)){install.packages("stringr")} ;library(stringr)
+if (!require(boot)){install.packages("boot")} ;library(boot)
+if (!require(data.table)){install.packages("data.table")} ;library(data.table)
+if (!require(dtplyr)){install.packages("dtplyr")} ;library(dtplyr)
+if (!require(scales)){install.packages("scales")} ;library(scales)
+if (!require(colourpicker)){install.packages("colourpicker")} ;library(colourpicker)
+if (!require(gtable)){install.packages("gtable")} ;library(gtable)
+if (!require(gridExtra)){install.packages("gridExtra")} ;library(gridExtra)
+if (!require(grid)){install.packages("grid")} ;library(grid)
+if (!require(shinycssloaders)){install.packages("shinycssloaders")} ;library(shinycssloaders)
+
+
 ```
 
+```{r, echo=FALSE}
+shinyApp(
+
+  
+  ui = dashboardPage(skin = "black",
+                      dashboardHeader(title = "DataVisualization"),
+                      dashboardSidebar(disable = TRUE),
+                      dashboardBody(
+                        
+                        fluidRow(
+                          
+                          
+                          column(width = 3,
+                                 
+                                 box(width = NULL, title = "File", status = "primary", solidHeader = TRUE, collapsible = TRUE,
+                                     fileInput("fichier", "Import .csv or .txt file"),radioButtons('quote', 'Quote',c(None='','Double Quote'='"','Single Quote'="'"),'"'),
+                                     uiOutput("nb_colonnes")
+                                 ),
+                                 box(width = NULL, title = "Quantitative Variables", status = "primary", solidHeader = TRUE, collapsible = TRUE, collapsed = TRUE,
+                                     p("This section makes it possible to select all the quantitative variables to be transformed into qualitative variables.
+                                       To perform this transformation, it is sufficient to select the quantitative variables requiring transformation 
+                                       into qualitative variables."),
+                                     br(),
+                                     uiOutput('var_namequant'),
+                                     textOutput('var_typequant')
+                                     ),
+                                 box(width = NULL, title = "Qualitative Variables", status = "primary", solidHeader = TRUE, collapsible = TRUE, collapsed = TRUE,
+                                     p("This section makes it possible to select all the qualitative variables to be transformed into quantitative variables.
+                                       To perform this transformation, it is sufficient to select the qualitative variables requiring transformation 
+                                       into quantitative variables."),
+                                     br(),
+                                     uiOutput('var_namequal'),
+                                     textOutput('var_typequal')
+                                     ),
+                                 box(width = NULL, title = "Descriptive of the initial file", status = "primary", solidHeader = TRUE, collapsible = TRUE, collapsed = TRUE,
+                                     textOutput("informations")
+                                 )
+                                 
+                          ),
+                          
+                          column(width = 9,
+                                 
+                                 box(width = NULL, title = "Data", status = "primary", solidHeader = TRUE, collapsible = TRUE, 
+                                     
+                                     
+                                     dataTableOutput('table')
+                                     
+                                 ),
+                                 box(width = NULL, title = "2D Graph", status = "primary", solidHeader = TRUE, collapsible = TRUE, collapsed = TRUE,
+                                     tabsetPanel(
+                                       
+                                       tabPanel('Plot',
+                                                uiOutput("quant_variables1"),
+                                                uiOutput("quant_variables2"),
+                                                uiOutput("plotcol"),
+                                                uiOutput("type"),
+                                                withSpinner(plotOutput("chart1"), type = 4),
+                                                uiOutput('format_chart1'),
+                                                uiOutput('download_chart1')
+                                       ),
+                                       tabPanel('Pie',
+                                                uiOutput("pie_variables"),
+                                                uiOutput('information_pie'),
+                                                withSpinner(plotOutput("chart2"), type = 4),
+                                                uiOutput('format_chart2'),
+                                                uiOutput('download_chart2')   
+                                       ),
+                                       tabPanel('Donut',
+                                                uiOutput("donut_variables"),
+                                                uiOutput('information_donut'),
+                                                withSpinner(plotOutput("chart3"), type = 4),
+                                                uiOutput('format_chart3'),
+                                                uiOutput('download_chart3')
+                                       ),
+                                       tabPanel('Histogram',
+                                                uiOutput("hist_variables"),
+                                                uiOutput("histcol"),
+                                                uiOutput("histcontourcol"),
+                                                uiOutput("abline_mean"),
+                                                withSpinner(plotOutput("chart4"), type = 4),
+                                                uiOutput('format_chart4'),
+                                                uiOutput('download_chart4')
+                                       ),
+                                       tabPanel('BoxPlot',
+                                                uiOutput("boxplot_variables"),
+                                                uiOutput("boxplot_levels"),
+                                                uiOutput("boxplotcol"),
+                                                uiOutput("boxplotcontourcol"),
+                                                uiOutput('information_boxplot'),
+                                                withSpinner(plotOutput("chart5"), type = 4),
+                                                uiOutput('format_chart5'),
+                                                uiOutput('download_chart5')
+                                       ),
+                                       tabPanel('BarPlot',
+                                                uiOutput("barplot_variables"),
+                                                uiOutput("barplot_orientation"),
+                                                uiOutput("barplotcol"),
+                                                uiOutput("barplotcontourcol"),
+                                                uiOutput('information_barplot'),
+                                                withSpinner(plotOutput("chart6"), type = 4),
+                                                uiOutput('format_chart6'),
+                                                uiOutput('download_chart6')    
+                                       ),
+                                       tabPanel('Point',
+                                                uiOutput("quant_variables_point1"),
+                                                uiOutput("quant_variables_point2"),
+                                                uiOutput("pointcol"),
+                                                #colourInput("pointcolors", "Choose colour","blue"),
+                                                uiOutput("lm_point"),
+                                                withSpinner(plotOutput("chart7"), type = 4),
+                                                uiOutput('format_chart7'),
+                                                uiOutput('download_chart7')
+                                       ),
+                                       tabPanel('Area Plot',
+                                                uiOutput("areaplot_variables"),
+                                                uiOutput("areacol"),
+                                                uiOutput("areacontourcol"),
+                                                #colourInput("areacolors", "Choose colour","aliceblue"),
+                                                #colourInput("areacontourcolors", "Choose contour colour", "blue"),
+                                                withSpinner(plotOutput("chart8"), type = 4),
+                                                uiOutput('format_chart8'),
+                                                uiOutput('download_chart8')
+                                       )
+                                       
+                                     )
+                                 ),
+                                 box(width = NULL, title = "3D Graph", status = "primary", solidHeader = TRUE, collapsible = TRUE, collapsed = TRUE,
+                                     tabsetPanel(
+                                       
+                                       tabPanel('Scatter Plot',
+                                                uiOutput("scatterplot_variables"),
+                                                uiOutput("scatterplot_levels"),
+                                                uiOutput("scatterplot_message"),
+                                                uiOutput('information_scatterplot'),
+                                                withSpinner(plotlyOutput("chart9"), type = 4)
+                                       ),
+                                       
+                                       tabPanel('Line Plot',
+                                                uiOutput("Lineplot_variables"),
+                                                uiOutput("Lineplot_levels"),
+                                                uiOutput("Lineplot_message"),
+                                                uiOutput('information_lineplot'),
+                                                withSpinner(plotlyOutput("chart10"), type = 4)
+                                       ),
+                                       
+                                       tabPanel('Mesh Plot',
+                                                uiOutput("Meshplot_variables"),
+                                                uiOutput("Meshplot_message"),
+                                                withSpinner(plotlyOutput("chart11"), type = 4)
+                                       )
+                                       
+                                       
+                                     )
+                                 ),
+                                 box(width = NULL, title = "Descriptive Statistics", status = "primary", solidHeader = TRUE, collapsible = TRUE, collapsed = TRUE,
+                                                h3("Presentation", align = "center", style = "color:blue"),
+                                                p("With this section, we can calcul:"),
+                                                p("- Minimum, mean, median, standard deviation and maximum of each quantitative variable"),
+                                                p("- The Number and the frequence of the modalities of each qualitative variable"),
+                                                br(),
+                                                uiOutput('var_quant_statdesc1'),
+                                                withSpinner(plotOutput('statdesc1'), type = 4),
+                                                uiOutput('format_stat1'),
+                                                uiOutput('download_stat1'),
+                                                br(),
+                                                uiOutput('var_qual_statdesc2'),
+                                                uiOutput('information_statdesc2'),
+                                                withSpinner(plotOutput('statdesc2'), type = 4),
+                                                uiOutput('format_stat2'),
+                                                uiOutput('download_stat2')
+                                 
+                                       )
+                          
+                          
+                          
+                                              )
+                                     )
+                                 )
+        ),
+
+
+
+
+  server = function(input, output, session) { options(shiny.maxRequestSize=1000*1024^2)
+  
+  
+  tableau = reactive({
+    
+    if (is.null(input$fichier)) 
+      return(NULL)
+   
+    tbl_df(fread(input$fichier$datapath, stringsAsFactors=TRUE, quote=input$quote))
+    
+    
+  })
+  
+  
+  
+  
+  #Variables quantitatives et Variables qualitatives
+  
+  
+  type = function(data){ #fonction qui retourne le type des variables d'un dataframe
+    tab = c()
+    for ( i in 1:length(data)){
+      tab1 = class(data[[i]])
+      tab = c(tab,tab1)
+    }
+    return(tab)
+  }
+  
+  
+  
+  output$var_namequant = renderUI({
+    
+    quant = names(tableau())[which( type(tableau()) == "numeric" |  type(tableau()) == "integer")]
+    if (is.null(input$fichier) | length(quant) == 0) {}
+    else {
+      selectInput("var_namequant1", label = "Choose variable to transform in qualitative variable:", choices = names(tableau())[which( type(tableau()) == "numeric" |  type(tableau()) == "integer")], multiple = TRUE, selectize = FALSE)
+    }
+    
+  })
+  
+  output$var_namequal = renderUI({
+    
+    qual = names(tableau())[which( type(tableau()) == "character" |  type(tableau()) == "factor")]
+    if (is.null(input$fichier) | length(qual) == 0) {}
+    else {
+      selectInput("var_namequal1", label = "Choose variable to transform in quantitative variable:", choices = names(tableau())[which( type(tableau()) == "character" |  type(tableau()) == "factor")], multiple = TRUE, selectize = FALSE)
+    }
+    
+  })
+  
+  
+  output$var_typequant = renderText({
+    if (is.null(input$fichier) | length(input$var_namequant1) == 0) {}
+    else{
+      if (length(input$var_namequant1) == 1){print("The variable selected above has been transformed into qualitative")}
+      else{print(paste("The",length(input$var_namequant1),"variables selected above have been transformed into qualitative"))}
+    }
+  })
+  
+  output$var_typequal = renderText({
+    if (is.null(input$fichier) | length(input$var_namequal1) == 0) {}
+    else{
+      if (length(input$var_namequal1) == 1){print("The variable selected above has been transformed into quantitative")}
+      else{print(paste("The",length(input$var_namequal1),"variables selected above have been transformed into quantitative"))}
+    }
+  })
+  
+  
+  
+  tableau1 = reactive({ #ici on cree tableau1 pour pouvoir transformer les variables en variables qualitatives ou quantitatives (base de donnee initial modifiee)
+    if (is.null(input$fichier)) {return(NULL)}
+    else{
+      if ( length(input$var_namequant1) == 0 & length(input$var_namequal1) == 0 & is.null(input$fichier) == "FALSE" ){
+        donnee = tableau()
+        return(tableau())
+      }else{
+        if ( length(input$var_namequant1) > 0 & length(input$var_namequal1) == 0 ){
+          donnee = tableau()
+          translate_to_factor = input$var_namequant1
+          for (col in translate_to_factor){
+            donnee = donnee %>% mutate_each_(funs(as.factor(as.character(.))), col)
+          }
+          return(donnee)
+        }else{
+          if ( length(input$var_namequal1) > 0 & length(input$var_namequant1) ==0 ){
+            donnee = tableau()
+            translate_to_numeric = input$var_namequal1
+            for (col in translate_to_numeric){
+              donnee = donnee %>% mutate_each_(funs(as.numeric(as.character(.))), col)
+            }
+            return(donnee)
+          }else{
+            if ( length(input$var_namequant1) > 0 & length(input$var_namequal1) > 0 ){
+              donnee = tableau()
+              
+              translate_to_factor = input$var_namequant1
+              for (col in translate_to_factor){
+                donnee = donnee %>% mutate_each_(funs(as.factor(as.character(.))), col)
+              }
+              
+              translate_to_numeric = input$var_namequal1
+              for (col in translate_to_numeric){
+                donnee = donnee %>% mutate_each_(funs(as.numeric(as.character(.))), col)
+              }
+              return(donnee)
+            }else{}
+          }
+        }
+        
+      }
+    }
+  })
+  
+  
+  
+  
+
+  lignes = reactive({ 
+    if (is.null(input$fichier)){}else{dim(tableau1())[1]} 
+  })
+  colonnes = reactive({ 
+    if (is.null(input$fichier)){}else{dim(tableau1())[2]} 
+  })
+  
+  output$nb_colonnes = renderUI({
+    if (is.null(input$fichier) ) {} 
+    else {
+      if (colonnes() < 5) {
+        sliderInput("nb_col", "Number of columns to display:",min = 1, max = dim(tableau1())[2], value = c(1,colonnes()), step = 1)
+      }
+      else{
+        sliderInput("nb_col", "Number of columns to display:",min = 1, max = dim(tableau1())[2], value = c(1,5), step = 1)
+      }
+    } 
+  })
+  
+  
+  
+  output$table = renderDataTable({
+    
+    if (is.null(input$fichier) | is.null(input$nb_col)) {return(NULL)}
+    else {
+      datatable(tableau1()[,input$nb_col[1]:input$nb_col[2]],
+                callback=JS('$("a.buttons-colvis").css("background","lightblue");
+                            return table;'),
+                extensions = c('FixedColumns','RowReorder','Buttons'), 
+                options = list(
+                  searchHighlight = TRUE,
+                  scrollX = TRUE,
+                  fixedColumns = TRUE,
+                  rowReorder = TRUE, 
+                  dom = 'Bfrtip',
+                  buttons = list('colvis')
+                ),
+                filter = 'top'
+    )
+      
+  }
+    
+})  
+  
+  
+  #recuperons les variables qualitatives
+  var_qual = reactive({
+    if (is.null(input$fichier)) {}
+    else{
+      #df1 = c()
+      df1 = names(tableau1())[which( type(tableau1()) == "character" |  type(tableau1()) == "factor")]
+      return(df1)
+    }
+  })
+  
+  
+  #recuperons les variables quantitatives
+  var_quant = reactive({
+    if (is.null(input$fichier)) {}
+    else{
+      #df3 = c()
+      df3 = names(tableau1())[which( type(tableau1()) == "numeric" |  type(tableau1()) == "integer")]
+      return(df3)
+    }
+  })
+  
+  
+  #informations
+  output$informations = renderText({ 
+    if (is.null(input$fichier)) {}
+    else{
+      paste("This file contains", lignes(), "rows and", colonnes(), "columns.")
+    } 
+  })
+  
+  
+  #Plot
+  output$quant_variables1 = renderUI({
+    if (is.null(input$fichier)) {}
+    else {
+      if ( length(var_quant()) == 0 ){return()
+      }else{
+        selectInput("select_variables_quant1", label = "y axis",choices = as.character(var_quant()), selectize = FALSE)
+      }
+    }
+  })
+  
+  output$quant_variables2 = renderUI({
+    if (is.null(input$fichier)) {}
+    else {
+      if ( length(var_quant()) == 0 ){return()
+      }else{
+        selectInput("select_variables_quant2", label = "x axis",choices = as.character(var_quant()), selectize = FALSE)
+      }
+    }
+  })
+  
+  output$plotcol = renderUI({
+    if (is.null(input$fichier)) {}
+    else {
+      if ( length(var_quant()) == 0 ){return()
+      }else{
+        colourInput("plotcolors", "Choose colour", "blue")
+      }
+    }
+  })
+  
+  #selectionner le type de graphique
+  output$type = renderUI({
+    if (is.null(input$fichier) ) {}
+    else {
+      if ( length(var_quant()) == 0 ){return()
+      }else{
+        checkboxInput("type1", label = "Nuage de points", value = TRUE)
+      }
+    }
+  })
+  
+  plot_chart1 = reactive({
+    
+    if ( is.null(input$fichier) | is.null(input$select_variables_quant1) | is.null(input$select_variables_quant2) ){return(NULL)}
+    else{
+      if (input$type1 == "TRUE"){
+        
+        donnee = select( tableau1(), get(input$select_variables_quant2), get(input$select_variables_quant1) )
+        ggplot(data = donnee, aes_string(x = input$select_variables_quant2, y = input$select_variables_quant1)) +
+          geom_point(color = input$plotcolors) + labs(x = input$select_variables_quant2, y = input$select_variables_quant1)
+        
+      }else{
+        if (input$type1 == "FALSE"){
+          
+          donnee = select( tableau1(), get(input$select_variables_quant2), get(input$select_variables_quant1) )
+          ggplot(data = donnee, aes_string(x = input$select_variables_quant2, y = input$select_variables_quant1)) +
+            geom_line(color = input$plotcolors) + labs(x = input$select_variables_quant2, y = input$select_variables_quant1)
+          
+          
+          
+        }else{
+          return() 
+        }
+        
+      }
+    }
+    
+  })
+  
+  output$chart1 = renderPlot({
+    plot_chart1()
+  })
+  
+  output$format_chart1 = renderUI({
+    if (is.null(input$fichier) | length(input$select_variables_quant1) == 0 | length(input$select_variables_quant2) == 0 ) {}
+    else {radioButtons('formatchart1', 'Document format', c('PDF', 'PNG', 'JPEG', 'TIFF', 'BMP'),inline = TRUE)}
+  })
+  
+  output$download_chart1 = renderUI({
+    if (is.null(input$fichier) | length(input$select_variables_quant1) == 0 | length(input$select_variables_quant2) == 0 ) {}
+    else {downloadButton("download_chart11", label = "Download graph")}
+  })
+  
+  output$download_chart11 <- downloadHandler(
+    
+    filename = function() {
+      paste('my-table', sep = '.', switch(
+        input$formatchart1, PDF = 'pdf', PNG = 'png', JPEG = 'jpeg', TIFF = 'tiff', BMP = 'bmp'
+      ))
+    },
+    
+    content = function(file) {
+      ggsave(file,plot_chart1(), width = 7, height = 6)
+    }
+    
+  )  
+
+  
+  #piechart
+  output$pie_variables = renderUI({
+    if (is.null(input$fichier)) {}
+    else {
+      if ( length(var_qual()) == 0 ){return()
+      }else{
+        selectInput("pie_variables1", label = "Selectionner la variable",choices = as.character(var_qual()), selectize = FALSE)
+      }
+    }
+  })
+  
+  output$information_pie = renderUI({
+    if (is.null(input$fichier) | length(var_qual()) == 0 | is.null(input$pie_variables1) ) {}
+    else{
+      if ( length(levels( tableau1()[[input$pie_variables1]] )) > 20 ){
+        code(paste("This variable contains too many levels (",
+                   length(levels( tableau1()[[input$pie_variables1]] )),")."))
+      }else{
+        
+      }
+    }
+  })
+  
+  plot_chart2 = reactive({
+    
+    if (is.null(input$fichier) | length(var_qual()) == 0 ) {return()}
+    else {
+      if ( length(input$pie_variables1) > 0 ){
+        donnee = as.data.frame(prop.table(table(select( tableau1(), get(input$pie_variables1) )))*100)
+        
+        blank_theme <- theme(
+          axis.title.x = element_blank(),
+          axis.title.y = element_blank(),
+          panel.border = element_blank(),
+          panel.grid=element_blank(),
+          axis.ticks = element_blank(),
+          plot.title=element_text(size=14, face="bold")
+        )
+        
+        ggplot(donnee, aes(x = "", y = Freq , fill = Var1)) + geom_bar(stat ="identity", width=1, colour = "grey30") + 
+          coord_polar(theta = "y", start=0) + labs(x = "", y = input$pie_variables1) + blank_theme + 
+          theme_grey() + geom_text(aes(y = Freq/3 + c(0, cumsum(Freq)[-length(Freq)]), label = percent(Freq/100)), size=5)
+        
+      }else{
+        return()
+      }
+      
+    }
+    
+  })
+  
+  output$chart2 = renderPlot({
+    if ( is.null(input$fichier) | length(input$pie_variables1) == 0){
+      return(NULL)
+    }else{
+      if ( length(levels( tableau1()[[input$pie_variables1]] )) > 20 ){return(NULL)}else{plot_chart2()}
+      }
+  })
+  
+  output$format_chart2 = renderUI({
+    if (is.null(input$fichier) | length(input$pie_variables1) == 0 ) {}
+    else {radioButtons('formatchart2', 'Document format', c('PDF', 'PNG', 'JPEG', 'TIFF', 'BMP'),inline = TRUE)}
+  })
+  
+  output$download_chart2 = renderUI({
+    if (is.null(input$fichier) | length(input$pie_variables1) == 0 ) {}
+    else {downloadButton("download_chart21", label = "Download graph")}
+  })
+  
+  output$download_chart21 <- downloadHandler(
+    
+    filename = function() {
+      paste('my-table', sep = '.', switch(
+        input$formatchart2, PDF = 'pdf', PNG = 'png', JPEG = 'jpeg', TIFF = 'tiff', BMP = 'bmp'
+      ))
+    },
+    
+    content = function(file) {
+      ggsave(file,plot_chart2(), width = 7, height = 6)
+    }
+    
+  )  
+  
+
+  #donutchart
+  
+  output$donut_variables = renderUI({
+    if (is.null(input$fichier)) {}
+    else {
+      if ( length(var_qual()) == 0 ){return()
+      }else{
+        selectInput("donut_variables1", label = "Select a variable", choices = as.character(var_qual()), selectize = FALSE)
+      }
+    }
+  })
+  
+  output$information_donut = renderUI({
+    if (is.null(input$fichier) | length(var_qual()) == 0 | is.null(input$donut_variables1) ) {}
+    else{
+      if ( length(levels( tableau1()[[input$donut_variables1]] )) > 20 ){
+        code(paste("This variable contains too many levels (",
+                   length(levels( tableau1()[[input$donut_variables1]] )),")."))
+      }else{
+        
+      }
+    }
+  })
+  
+  
+  plot_chart3 = reactive({
+    
+    if (is.null(input$fichier) | length(var_qual()) == 0 ) {return()}
+    else {
+      if ( length(input$donut_variables1) > 0 ){
+        
+        donnee = data.frame(table(select( tableau1(), get(input$donut_variables1) )))
+        donnee$fraction = round(donnee$Freq / sum(donnee$Freq),4)
+        donnee = donnee[order(donnee$fraction), ]
+        donnee$ymax = cumsum(donnee$fraction)
+        donnee$ymin = c(0, head(donnee$ymax, n=-1))
+        
+        ggplot(donnee,aes(fill=Var1, ymax=ymax, ymin=ymin, xmax=4, xmin=3)) + geom_rect(colour="grey30") + 
+          coord_polar(theta = "y") + xlim(c(1, 4)) + labs(x = "", y = "") +
+          geom_label(aes(label=paste(fraction*100,"%"),x=3.5,y=(ymin+ymax)/2),inherit.aes = TRUE, show.legend = FALSE) 
+        
+      }else{
+        return()
+      }
+    }
+    
+  })
+  
+  output$chart3 = renderPlot({
+    if ( is.null(input$fichier) | length(input$donut_variables1) == 0){
+      return(NULL)
+    }else{
+      if ( length(levels( tableau1()[[input$donut_variables1]] )) > 20 ){return(NULL)}else{plot_chart3()}
+     }  
+  })
+  
+  output$format_chart3 = renderUI({
+    if (is.null(input$fichier) | length(input$donut_variables1) == 0 ) {}
+    else {radioButtons('formatchart3', 'Document format', c('PDF', 'PNG', 'JPEG', 'TIFF', 'BMP'),inline = TRUE)}
+  })
+  
+  output$download_chart3 = renderUI({
+    if (is.null(input$fichier) | length(input$donut_variables1) == 0 ) {}
+    else {downloadButton("download_chart31", label = "Download graph")}
+  })
+  
+  output$download_chart31 <- downloadHandler(
+    
+    filename = function() {
+      paste('my-table', sep = '.', switch(
+        input$formatchart3, PDF = 'pdf', PNG = 'png', JPEG = 'jpeg', TIFF = 'tiff', BMP = 'bmp'
+      ))
+    },
+    
+    content = function(file) {
+      ggsave(file,plot_chart3(), width = 7, height = 6)
+    }
+    
+  )
+  
+  #Histogramme
+  output$hist_variables = renderUI({
+    if (is.null(input$fichier)) {}
+    else {
+      if ( length(var_quant()) == 0 ){return()
+      }else{
+        selectInput("hist_variables1", label = "select a variable",choices = as.character(var_quant()), selectize = FALSE)
+      }
+    }
+  })
+  
+  output$histcol = renderUI({
+    if (is.null(input$fichier)) {}
+    else {
+      if ( length(var_quant()) == 0 ){return()
+      }else{
+        colourInput("histcolors", "Choose colour","aliceblue")      
+        }
+    }
+  })
+  
+  output$histcontourcol = renderUI({
+    if (is.null(input$fichier)) {}
+    else {
+      if ( length(var_quant()) == 0 ){return()
+      }else{
+        colourInput("histcontourcolors", "Choose contour colour", "blue")      
+      }
+    }
+  })
+  
+  output$abline_mean = renderUI({
+    if (is.null(input$fichier)) {}
+    else {
+      if ( length(var_quant()) == 0 ){return()
+      }else{
+        checkboxInput('abline_mean1', 'Afficher la moyenne', TRUE)
+      }
+    }
+  })
+  
+  plot_chart4 = reactive({
+    
+    if (is.null(input$fichier) | is.null(input$hist_variables1) ) {return()}
+    else{
+      if ( length(input$hist_variables1) > 0 & input$abline_mean1 == FALSE){
+        donnee = select( tableau1(), get(input$hist_variables1))
+        ggplot(data = donnee, aes_string(input$hist_variables1)) + geom_histogram(color = input$histcontourcolors, fill = input$histcolors) + 
+          xlab(input$hist_variables1)
+      }else{
+        if ( length(input$hist_variables1) > 0 & input$abline_mean1 == TRUE){
+          donnee = select( tableau1(), get(input$hist_variables1))
+          ggplot(data = donnee, aes_string(input$hist_variables1)) + 
+            geom_histogram(color = input$histcontourcolors, fill = input$histcolors) + 
+            geom_vline(aes(xintercept=mean(get(input$hist_variables1), na.rm=T)),color="red", linetype="dashed", size=1) +
+            xlab(input$hist_variables1)
+        }else{
+          return(NULL)
+        }
+      }
+      
+    }
+    
+  })
+  
+  output$chart4 = renderPlot({
+    plot_chart4()
+  })
+  
+  output$format_chart4 = renderUI({
+    if (is.null(input$fichier) | length(input$hist_variables1) == 0 ) {}
+    else {radioButtons('formatchart4', 'Document format', c('PDF', 'PNG', 'JPEG', 'TIFF', 'BMP'),inline = TRUE)}
+  })
+  
+  output$download_chart4 = renderUI({
+    if (is.null(input$fichier) | length(input$hist_variables1) == 0 ) {}
+    else {downloadButton("download_chart41", label = "Download graph")}
+  })
+  
+  output$download_chart41 <- downloadHandler(
+    
+    filename = function() {
+      paste('my-table', sep = '.', switch(
+        input$formatchart4, PDF = 'pdf', PNG = 'png', JPEG = 'jpeg', TIFF = 'tiff', BMP = 'bmp'
+      ))
+    },
+    
+    content = function(file) {
+      ggsave(file,plot_chart4(), width = 7, height = 6)
+    }
+    
+  ) 
+
+  
+  #Boxplot
+  output$boxplot_variables = renderUI({
+    if (is.null(input$fichier)) {}
+    else {
+      if ( length(var_quant()) == 0 ){return(NULL)
+      }else{
+        selectInput("boxplot_variables1", label = "select a variable",choices = as.character(var_quant()), selectize = FALSE)
+      }
+    }
+  })
+  
+  output$boxplot_levels = renderUI({
+    if (is.null(input$fichier)) {}
+    else {
+      if ( length(var_qual()) == 0 ){
+        selectInput("boxplot_levels1", label = "By variables levels",choices = as.character(c('')), selectize = FALSE )
+      }else{
+        if (length(var_quant()) == 0){
+          selectInput("boxplot_levels1", label = "By variables levels",choices = as.character(c('')), selectize = FALSE )
+        }else{
+            selectInput("boxplot_levels1", label = "By variables levels",choices = as.character(c('',var_qual())), selectize = FALSE )
+          }
+      }
+    }
+  })
+  
+  output$boxplotcol = renderUI({
+    if (is.null(input$fichier)) {}
+    else {
+      if ( length(var_quant()) == 0 ){return(NULL)
+      }else{
+        colourInput("boxplotcolors", "Choose colour","aliceblue")      
+      }
+    }
+  })
+  
+  output$boxplotcontourcol = renderUI({
+    if (is.null(input$fichier)) {}
+    else {
+      if ( length(var_quant()) == 0 ){return(NULL)
+      }else{
+        colourInput("boxplotcontourcolors", "Choose contour colour", "blue")      
+      }
+    }
+  })
+  
+  
+  
+  output$information_boxplot = renderUI({
+    if (is.null(input$fichier) | length(var_qual()) == 0 | is.null(input$boxplot_levels1) ) {}
+    else{
+      if ( length(levels( tableau1()[[input$boxplot_levels1]] )) > 20 ){
+        code(paste("This variable contains too many levels (",
+                   length(levels( tableau1()[[input$boxplot_levels1]] )),")."))
+      }else{
+        
+      }
+    }
+  })
+  
+  
+  plot_chart5 = reactive({
+    
+    if ( is.null(input$fichier) | length(var_quant()) == 0 | is.null(input$boxplot_levels1) ) {return()}
+    else{
+      
+      if ( length(input$boxplot_variables1) > 0 & input$boxplot_levels1 == '' ){
+        
+        donnee = select( tableau1(), get(input$boxplot_variables1))
+        ggplot(donnee, aes_string(x = 1, y = input$boxplot_variables1)) + geom_boxplot(color =  input$boxplotcontourcolors, fill = input$boxplotcolors) 
+        
+        
+      }else{
+        
+        if ( length(input$boxplot_variables1) > 0 & input$boxplot_levels1 != '' ){
+          
+          donnee = select( tableau1(), get(input$boxplot_variables1), get(input$boxplot_levels1))
+          ggplot(donnee, aes_string(x = input$boxplot_levels1,y = input$boxplot_variables1)) + geom_boxplot(colour =  input$boxplotcontourcolors, fill = input$boxplotcolors) + ylab(input$boxplot_variables1)
+          
+          
+        }else{
+          return(NULL) 
+        }
+        
+      }
+      
+    }
+    
+    
+  })
+  
+  output$chart5 = renderPlot({
+    
+    if ( is.null(input$fichier) | length(input$boxplot_levels1) == 0){
+      return(NULL)
+    }else{
+      if ( length(levels( tableau1()[[input$boxplot_levels1]] )) > 20 ){return(NULL)}else{plot_chart5()}
+    }
+    
+  })
+  
+  output$format_chart5 = renderUI({
+    if (is.null(input$fichier) | length(input$boxplot_variables1) == 0 ) {}
+    else {radioButtons('formatchart5', 'Document format', c('PDF', 'PNG', 'JPEG', 'TIFF', 'BMP'),inline = TRUE)}
+  })
+  
+  output$download_chart5 = renderUI({
+    if (is.null(input$fichier) | length(input$boxplot_variables1) == 0 ) {}
+    else {downloadButton("download_chart51", label = "Download graph")}
+  })
+  
+  output$download_chart51 <- downloadHandler(
+    
+    filename = function() {
+      paste('my-table', sep = '.', switch(
+        input$formatchart5, PDF = 'pdf', PNG = 'png', JPEG = 'jpeg', TIFF = 'tiff', BMP = 'bmp'
+      ))
+    },
+    
+    content = function(file) {
+      ggsave(file,plot_chart5(), width = 7, height = 6)
+    }
+    
+  )
+  
+  
+  #Barplot
+  output$barplot_variables = renderUI({
+    if (is.null(input$fichier)) {}
+    else {
+      if ( length(var_qual()) == 0 ){return()
+      }else{
+        selectInput("barplot_variables1", label = "select a variable",choices = as.character(var_qual()), selectize = FALSE)
+      }
+    }
+  })
+  
+  output$barplot_orientation = renderUI({
+    if (is.null(input$fichier)) {}
+    else {
+      if ( length(var_qual()) == 0 ){return()
+      }else{
+        selectInput("barplot_orientation1", label = "Graph Orientation",choices = c('vertical','horizontal'), selectize = FALSE)
+      }
+    }
+  })
+  
+  output$barplotcol = renderUI({
+    if (is.null(input$fichier)) {}
+    else {
+      if ( length(var_qual()) == 0 ){return(NULL)
+      }else{
+        colourInput("barplotcolors", "Choose colour","aliceblue")      
+      }
+    }
+  })
+  
+  output$barplotcontourcol = renderUI({
+    if (is.null(input$fichier)) {}
+    else {
+      if ( length(var_qual()) == 0 ){return(NULL)
+      }else{
+        colourInput("barplotcontourcolors", "Choose contour colour", "blue")    
+      }
+    }  
+  })
+  
+  output$information_barplot = renderUI({
+    if (is.null(input$fichier) | length(var_qual()) == 0 | is.null(input$barplot_variables1) ) {}
+    else{
+      if ( length(levels( tableau1()[[input$barplot_variables1]] )) > 20 ){
+        code(paste("This variable contains too many levels (",
+                   length(levels( tableau1()[[input$barplot_variables1]] )),")."))
+      }else{
+        
+      }
+    }
+  })
+  
+  
+  plot_chart6 = reactive({
+    
+    
+    if (is.null(input$fichier) | length(var_qual()) == 0 | is.null(input$barplot_orientation1)) {return()}
+    else{
+      if ( length(input$barplot_variables1) > 0 & input$barplot_orientation1 == "vertical"){
+        
+        data = table( select(tableau1(),get(input$barplot_variables1)) )
+        donnee = data.frame(prop.table(data))
+        ggplot(data = donnee, aes(x=Var1, y=Freq)) + geom_bar(stat="identity", color = input$barplotcontourcolors, fill = input$barplotcolors) + labs(x = input$barplot_variables1, y = "percent")
+        
+        
+        
+      }else{
+        
+        if ( length(input$barplot_variables1) > 0 & input$barplot_orientation1 == "horizontal"){
+          
+          data = table( select(tableau1(),get(input$barplot_variables1)) )
+          donnee = data.frame(prop.table(data))          
+          ggplot(data = donnee, aes(x=Var1, y=Freq)) + geom_bar(stat="identity", color = input$barplotcontourcolors, fill = input$barplotcolors) + coord_flip() + labs(y = input$barplot_variables1, x = "percent")
+          
+          
+          
+          
+          
+        }else{return(NULL)}
+        
+      }
+      
+    }
+    
+    
+  })
+  
+  output$chart6 = renderPlot({
+    
+    if ( is.null(input$fichier) | length(input$barplot_variables1) == 0){
+      return(NULL)
+    }else{
+      if ( length(levels( tableau1()[[input$barplot_variables1]] )) > 20 ){return(NULL)}else{plot_chart6()}
+    }
+    
+  })
+  
+  output$format_chart6 = renderUI({
+    if (is.null(input$fichier) | length(input$barplot_variables1) == 0 ) {}
+    else {radioButtons('formatchart6', 'Document format', c('PDF', 'PNG', 'JPEG', 'TIFF', 'BMP'),inline = TRUE)}
+  })
+  
+  output$download_chart6 = renderUI({
+    if (is.null(input$fichier) | length(input$barplot_variables1) == 0 ) {}
+    else {downloadButton("download_chart61", label = "Download graph")}
+  })
+  
+  output$download_chart61 <- downloadHandler(
+    
+    filename = function() {
+      paste('my-table', sep = '.', switch(
+        input$formatchart6, PDF = 'pdf', PNG = 'png', JPEG = 'jpeg', TIFF = 'tiff', BMP = 'bmp'
+      ))
+    },
+    
+    content = function(file) {
+      ggsave(file,plot_chart6(), width = 7, height = 6)
+    }
+    
+  )
+  
+
+  #Point
+  
+  output$quant_variables_point1 = renderUI({
+    if (is.null(input$fichier)) {}
+    else {
+      if ( length(var_quant()) == 0 ){return(NULL)
+      }else{
+        selectInput("point_variables_quant1", label = "y axis",choices = as.character(var_quant()), selectize = FALSE)
+      }
+    }
+  })
+  
+  output$quant_variables_point2 = renderUI({
+    if (is.null(input$fichier) ) {}
+    else {
+      if ( length(var_quant()) == 0 ){return(NULL)
+      }else{
+        selectInput("point_variables_quant2", label = "x axis",choices = as.character(var_quant()), selectize = FALSE)
+      }
+    }
+  })
+  
+  output$lm_point = renderUI({
+    if (is.null(input$fichier) ) {}
+    else {
+      if ( length(var_quant()) == 0 ){return(NULL)
+      }else{
+        checkboxInput("lm_point1", label = "Afficher la droite de regression lineaire", value = FALSE)
+      }
+    }
+  })
+  
+  output$pointcol = renderUI({
+    if (is.null(input$fichier)) {}
+    else {
+      if ( length(var_quant()) == 0 ){return(NULL)
+      }else{
+        colourInput("pointcolors", "Choose colour","blue")
+      }
+    }
+  })
+  
+  plot_chart7 = reactive({
+    
+    
+    if (is.null(input$fichier)  | is.null(input$point_variables_quant1) | is.null(input$point_variables_quant2) ){return(NULL)}
+    else{ 
+      if ( length(input$point_variables_quant1) > 0 & length(input$point_variables_quant2) > 0 & input$lm_point1 == FALSE){
+        donnee = select(tableau1(),get(input$point_variables_quant2),get(input$point_variables_quant1))
+        ggplot( donnee, aes_string(x = input$point_variables_quant2, y = input$point_variables_quant1)) +
+          geom_point(shape=1, color = input$pointcolors) + geom_smooth()
+        
+        
+      }else{
+        
+        if ( length(input$point_variables_quant1) > 0 & length(input$point_variables_quant2) > 0 & input$lm_point1 == TRUE){
+          donnee = select(tableau1(),get(input$point_variables_quant2),get(input$point_variables_quant1))
+          ggplot( donnee, aes_string(x = input$point_variables_quant2, y = input$point_variables_quant1)) +
+            geom_point(shape=1, color = input$pointcolors) +  geom_smooth(method = lm, se = FALSE) 
+          
+          
+        }else{
+          
+          
+          
+        }
+        
+      }
+    }
+    
+    
+  })
+  
+  output$chart7 = renderPlot({
+    plot_chart7()
+  })
+  
+  output$format_chart7 = renderUI({
+    if (is.null(input$fichier) | length(input$point_variables_quant2) == 0 | length(input$point_variables_quant1) == 0 ) {}
+    else {radioButtons('formatchart7', 'Document format', c('PDF', 'PNG', 'JPEG', 'TIFF', 'BMP'),inline = TRUE)}
+  })
+  
+  output$download_chart7 = renderUI({
+    if (is.null(input$fichier) | length(input$point_variables_quant2) == 0 | length(input$point_variables_quant1) == 0 ) {}
+    else {downloadButton("download_chart71", label = "Download graph")}
+  })
+  
+  output$download_chart71 <- downloadHandler(
+    
+    filename = function() {
+      paste('my-table', sep = '.', switch(
+        input$formatchart7, PDF = 'pdf', PNG = 'png', JPEG = 'jpeg', TIFF = 'tiff', BMP = 'bmp'
+      ))
+    },
+    
+    content = function(file) {
+      ggsave(file,plot_chart7(), width = 7, height = 6)
+    }
+    
+  )
+    
+    #Area Plot
+  
+  output$areaplot_variables = renderUI({
+    if (is.null(input$fichier)) {}
+    else {
+      if ( length(var_quant()) == 0 ){return(NULL)
+      }else{
+        selectInput("areaplot_variables1", label = "Abscisse",choices = as.character(var_quant()), selectize = FALSE)
+      }
+    }
+  })
+  
+  output$areacol = renderUI({
+    if (is.null(input$fichier)) {}
+    else {
+      if ( length(var_quant()) == 0 ){return(NULL)
+      }else{
+        colourInput("areacolors", "Choose colour","aliceblue")
+      }
+    }
+  })
+  
+  output$areacontourcol = renderUI({
+    if (is.null(input$fichier)) {}
+    else {
+      if ( length(var_quant()) == 0 ){return(NULL)
+      }else{
+        colourInput("areacontourcolors", "Choose contour colour", "blue")
+      }
+    }
+  })
+  
+ 
+  plot_chart8 = reactive({
+    if ( is.null(input$fichier) | length(var_quant()) == 0 | is.null(input$areaplot_variables1) ){return(NULL)}
+    else{
+      
+      donnee = select(tableau1(),get(input$areaplot_variables1))
+      ggplot(donnee, aes_string(x = input$areaplot_variables1)) + geom_density(color=input$areacontourcolors, fill=input$areacolors)
+    }
+  })
+  
+  output$chart8 = renderPlot({
+    plot_chart8()
+  })
+  
+  output$format_chart8 = renderUI({
+    if (is.null(input$fichier) | length(input$areaplot_variables1) == 0) {}
+    else {radioButtons('formatchart8', 'Document format', c('PDF', 'PNG', 'JPEG', 'TIFF', 'BMP'),inline = TRUE)}
+  })
+  
+  output$download_chart8 = renderUI({
+    if (is.null(input$fichier) | length(input$areaplot_variables1) == 0) {}
+    else {downloadButton("download_chart81", label = "Download graph")}
+  })
+  
+  output$download_chart81 <- downloadHandler(
+    
+    filename = function() {
+      paste('my-table', sep = '.', switch(
+        input$formatchart8, PDF = 'pdf', PNG = 'png', JPEG = 'jpeg', TIFF = 'tiff', BMP = 'bmp'
+      ))
+    },
+    
+    content = function(file) {
+      ggsave(file,plot_chart8(), width = 7, height = 6)
+    }
+    
+  )
+  
+  
+  #Scatter Plot
+  
+  output$scatterplot_variables = renderUI({
+    if (is.null(input$fichier)) {}
+    else {
+      if ( length(var_quant()) == 0 ){return()
+      }else{
+        selectInput("scatterplot_variables1", label = "select three variables",choices = as.character(var_quant()), multiple = TRUE, selectize = FALSE)
+      }
+    }
+  })
+  
+  output$scatterplot_levels = renderUI({
+    if (is.null(input$fichier) | length(var_quant()) == 0) {}
+    else {
+      if ( length(var_qual()) == 0){
+        selectInput("scatterplot_levels1", label = "By variables levels",choices = as.character(c('')) , selectize = FALSE)
+        }else{
+       selectInput("scatterplot_levels1", label = "By variables levels",choices = as.character(c('',var_qual())) , selectize = FALSE)
+        }
+      }
+  })
+  
+  
+  output$scatterplot_message = renderUI({
+    if (is.null(input$fichier)) {}
+    else {
+      if ( length(var_qual()) == 0 | length(var_quant()) == 0 ){return()
+      }else{
+        if ( length(input$scatterplot_variables1) != 3){
+          code("Please select 3 variables in the first enter")
+        }else{
+          
+        }
+      }
+    }
+    
+  })
+  
+
+  output$information_scatterplot = renderUI({
+    if (is.null(input$fichier) | length(var_qual()) == 0 | is.null(input$scatterplot_levels1) ) {}
+    else{
+      if ( length(levels( tableau1()[[input$scatterplot_levels1]] )) > 20 ){
+        code(paste("This variable contains too many levels (",
+                   length(levels( tableau1()[[input$scatterplot_levels1]] )),")."))
+      }else{
+        return(NULL)
+      }
+    }
+  })
+  
+  plot_chart9 = reactive({
+    
+    
+    if ( is.null(input$fichier) | length(var_quant()) == 0 | is.null(input$scatterplot_levels1) ) {return(NULL)}
+    else{
+      
+      if ( length(input$scatterplot_variables1) == 3 & input$scatterplot_levels1 == '' ){
+        donnee = select(tableau1(), get(input$scatterplot_variables1[1]), get(input$scatterplot_variables1[2]), get(input$scatterplot_variables1[3]))
+        plot_ly(donnee, x = ~get(input$scatterplot_variables1[1]), y = ~get(input$scatterplot_variables1[2]), z = ~get(input$scatterplot_variables1[3])) %>%
+          add_markers() %>%
+          layout(scene = list(xaxis = list(title = input$scatterplot_variables1[1]),
+                              yaxis = list(title = input$scatterplot_variables1[2]),
+                              zaxis = list(title = input$scatterplot_variables1[3])))
+        
+      }else{
+        
+        if ( length(input$scatterplot_variables1) == 3 & input$scatterplot_levels1 != '' ){
+          donnee = select(tableau1(), get(input$scatterplot_variables1[1]), get(input$scatterplot_variables1[2]), get(input$scatterplot_variables1[3]), get(input$scatterplot_levels1))
+          plot_ly(donnee, x = ~get(input$scatterplot_variables1[1]), y = ~get(input$scatterplot_variables1[2]), z = ~get(input$scatterplot_variables1[3]), color = ~get(input$scatterplot_levels1)) %>%
+            add_markers() %>%
+            layout(scene = list(xaxis = list(title = input$scatterplot_variables1[1]),
+                                yaxis = list(title = input$scatterplot_variables1[2]),
+                                zaxis = list(title = input$scatterplot_variables1[3])))
+          
+        }else{
+          return(NULL)
+        }
+        
+      }
+      
+    }
+    
+    
+  })
+    
+  output$chart9 = renderPlotly({
+    
+    if ( is.null(input$fichier) | length(input$scatterplot_levels1) == 0 | length(input$scatterplot_variables1) != 3){
+      return(NULL)
+    }else{
+      if ( length(levels( tableau1()[[input$scatterplot_levels1]] )) > 20 ){return(NULL)}else{plot_chart9()}
+    }
+    
+  })
+          
+  
+  
+  #Line Plot
+   
+  output$Lineplot_variables = renderUI({
+    if (is.null(input$fichier)) {}
+    else {
+      if ( length(var_quant()) == 0 ){return(NULL)
+      }else{
+        selectInput("Lineplot_variables1", label = "select three variables",choices = as.character(var_quant()), multiple = TRUE, selectize = FALSE)
+      }
+    }
+  })
+  
+  output$Lineplot_levels = renderUI({
+    if (is.null(input$fichier) | length(var_quant()) == 0) {}
+    else {
+      if ( length(var_qual()) == 0  ){
+        selectInput("Lineplot_levels1", label = "By variables levels",choices = as.character(c('')) , selectize = FALSE)
+        
+      }else{
+        selectInput("Lineplot_levels1", label = "By variables levels",choices = as.character(c('',var_qual())) , selectize = FALSE)
+      }
+    }
+  })
+  
+  
+  output$Lineplot_message = renderUI({
+    if (is.null(input$fichier)) {}
+    else {
+      if ( length(var_qual()) == 0 | length(var_quant()) == 0 ){return()
+      }else{
+        if ( length(input$Lineplot_variables1) != 3){
+          code("Please select 3 variables in the first enter")
+        }else{
+          
+        }
+      }
+    }
+    
+  })
+  
+  output$information_lineplot = renderUI({
+    if (is.null(input$fichier) | length(var_qual()) == 0 | is.null(input$Lineplot_levels1) ) {}
+    else{
+      if ( length(levels( tableau1()[[input$Lineplot_levels1]] )) > 20 ){
+        code(paste("This variable contains too many levels (",
+                   length(levels( tableau1()[[input$Lineplot_levels1]] )),")."))
+      }else{
+        return(NULL)
+      }
+    }
+  })
+  
+  plot_chart10 = reactive({
+    
+    
+    
+    if ( is.null(input$fichier) | length(var_quant()) == 0 | is.null(input$Lineplot_levels1) ) {return()}
+    else{
+      
+      if ( length(input$Lineplot_variables1) == 3 & input$Lineplot_levels1 == '' ){
+        donnee = select(tableau1(), get(input$Lineplot_variables1[1]), get(input$Lineplot_variables1[2]), get(input$Lineplot_variables1[3]))
+        plot_ly(donnee, x = ~get(input$Lineplot_variables1[1]), y = ~get(input$Lineplot_variables1[2]), z = ~get(input$Lineplot_variables1[3]), type = 'scatter3d', mode = 'lines',
+                opacity = 1, line = list(width = 6, reverscale = FALSE) ) %>%
+          layout(scene = list(xaxis = list(title = input$Lineplot_variables1[1]),
+                              yaxis = list(title = input$Lineplot_variables1[2]),
+                              zaxis = list(title = input$Lineplot_variables1[3])))
+        
+        
+      }else{
+        
+        if ( length(input$Lineplot_variables1) == 3 & input$Lineplot_levels1 != '' ){
+          donnee = select(tableau1(), get(input$Lineplot_variables1[1]), get(input$Lineplot_variables1[2]), get(input$Lineplot_variables1[3]), get(input$Lineplot_levels1))
+          plot_ly(donnee, x = ~get(input$Lineplot_variables1[1]), y = ~get(input$Lineplot_variables1[2]), z = ~get(input$Lineplot_variables1[3]), color = ~get(input$Lineplot_levels1), type = 'scatter3d', mode = 'lines',
+                  opacity = 1, line = list(width = 6, color = tableau1()[,input$Lineplot_levels1], reverscale = FALSE) ) %>%
+            layout(scene = list(xaxis = list(title = input$Lineplot_variables1[1]),
+                                yaxis = list(title = input$Lineplot_variables1[2]),
+                                zaxis = list(title = input$Lineplot_variables1[3])))
+          
+        }else{
+          return(NULL)
+        }
+        
+      }
+      
+    }
+    
+    
+    
+    })
+  
+  output$chart10 = renderPlotly({
+    
+    if ( is.null(input$fichier) | length(input$Lineplot_levels1) == 0 | length(input$Lineplot_variables1) != 3){
+      return(NULL)
+    }else{
+      if ( length(levels( tableau1()[[input$Lineplot_levels1]] )) > 20 ){return(NULL)}else{plot_chart10()}
+    }
+    
+  })
+  
+  
+  #Mesh Plot
+  
+  
+  output$Meshplot_variables = renderUI({
+    if (is.null(input$fichier)) {}
+    else {
+      if ( length(var_quant()) == 0 ){return()
+      }else{
+        selectInput("Meshplot_variables1", label = "select three variables",choices = as.character(var_quant()), multiple = TRUE, selectize = FALSE)
+      }
+    }
+  })
+  
+   
+  output$Meshplot_message = renderUI({
+    if (is.null(input$fichier)) {}
+    else {
+      if ( length(var_qual()) == 0 | length(var_quant()) == 0 ){return()
+      }else{
+        if ( length(input$Meshplot_variables1) != 3){
+          code("Please select 3 variables in the first enter")
+        }else{
+          
+        }
+      }
+    }
+    
+  })
+  
+  
+  output$chart11 = renderPlotly({
+    
+    if ( is.null(input$fichier) | length(var_quant()) == 0 ) {return()}
+    else{
+      
+      if ( length(input$Meshplot_variables1) == 3 ){
+        donnee = select(tableau1(), get(input$Meshplot_variables1[1]), get(input$Meshplot_variables1[2]), get(input$Meshplot_variables1[3]))
+        plot_ly(donnee, x = ~get(input$Meshplot_variables1[1]), y = ~get(input$Meshplot_variables1[2]), z = ~get(input$Meshplot_variables1[3]),  type = 'mesh3d') %>%
+          layout(scene = list(xaxis = list(title = input$Meshplot_variables1[1]),
+                              yaxis = list(title = input$Meshplot_variables1[2]),
+                              zaxis = list(title = input$Meshplot_variables1[3])))
+        
+        
+      }else{
+        return(NULL)
+      }
+      
+    }
+    
+  })
+  
+  #statistiques descritives
+  
+  output$var_quant_statdesc1 = renderUI({
+    if (is.null(input$fichier) | length(var_quant()) == 0 ) {}
+    else {selectInput("var_quant_statdesc11", label = "Choose a quantitative variable", choices = var_quant(), selectize = FALSE)}
+  })
+  
+  plot_statdesc1 = reactive({
+    if (is.null(input$fichier) | is.null(input$var_quant_statdesc11)) {}
+    else {
+      br()
+      donnee = select(tableau1(),get(input$var_quant_statdesc11))
+      tab1 = donnee %>% summarise_each(funs(max(., na.rm = T),
+                                            mean(., na.rm = T),
+                                            median(., na.rm = T),
+                                            var(., na.rm = T),
+                                            sd(., na.rm = T),
+                                            valid.n,
+                                            min(., na.rm = T)))
+      row.names(tab1) = input$var_quant_statdesc11
+      tab1 = t(tab1)
+      tab1 = data.frame(tab1)
+      tab1 = tab1 %>% mutate(parameter = row.names(tab1)) %>% select(parameter,get(input$var_quant_statdesc11))
+      
+      
+      ggplot(tab1) + 
+        annotation_custom(tableGrob(tab1)) +
+        theme_bw() +
+        theme(panel.background = element_rect(colour = "black", size = 0.5),
+              panel.grid.major = element_blank(),
+              panel.grid.minor = element_blank(),
+              plot.title = element_text(size = rel(1.2), face = "bold", vjust = 2),
+              axis.ticks = element_blank(), 
+              axis.text = element_blank(),
+              axis.title = element_blank())
+      
+    } 
+  })
+  
+  output$statdesc1 = renderPlot({
+    plot_statdesc1() 
+  })
+  
+  output$format_stat1 = renderUI({
+    if (is.null(input$fichier) | length(input$var_quant_statdesc11) == 0) {}
+    else {radioButtons('format1', 'Document format', c('PDF', 'PNG', 'JPEG', 'TIFF', 'BMP'),inline = TRUE)}
+  })
+  
+  output$download_stat1 = renderUI({
+    if (is.null(input$fichier) | length(input$var_quant_statdesc11) == 0) {}
+    else {downloadButton("download_stat11", label = "Download table")}
+  })
+  
+  output$download_stat11 <- downloadHandler(
+    
+    filename = function() {
+      paste('my-table', sep = '.', switch(
+        input$format1, PDF = 'pdf', PNG = 'png', JPEG = 'jpeg', TIFF = 'tiff', BMP = 'bmp'
+      ))
+    },
+    
+    content = function(file) {
+      ggsave(file,plot_statdesc1(), width = 7, height = 6)
+    }
+    
+  )
+  
+  
+  
+  output$var_qual_statdesc2 = renderUI({
+    if (is.null(input$fichier) | length(var_qual()) == 0) {}
+    else {selectInput("var_qual_statdesc21", label = "Choose a qualitative variable", choices = var_qual(), selectize = FALSE)}
+  })
+  
+  output$information_statdesc2 = renderUI({
+    if (is.null(input$fichier) | length(var_qual()) == 0 | is.null(input$var_qual_statdesc21) ) {}
+    else{
+      if ( length(levels( tableau1()[[input$var_qual_statdesc21]] )) > 20 ){
+        code(paste("This variable contains too many levels (",
+                   length(levels( tableau1()[[input$var_qual_statdesc21]] )),")."))
+      }else{
+        
+      }
+    }
+  })
+
+  plot_statdesc2 = reactive({
+    if (is.null(input$fichier)| is.null(input$var_qual_statdesc21)) {}
+    else{
+      br()
+      donnee = select(tableau1(), get(input$var_qual_statdesc21))
+      tab1 = donnee %>% 
+        count_(input$var_qual_statdesc21) %>% 
+        mutate(frequence = paste0(round(100 * n/sum(n), 2), "%"))
+      
+      ggplot(tab1) + 
+        annotation_custom(tableGrob(tab1)) +
+        theme_bw() +
+        theme(panel.background = element_rect(colour = "black", size = 0.5),
+              panel.grid.major = element_blank(),
+              panel.grid.minor = element_blank(),
+              plot.title = element_text(size = rel(1.2), face = "bold", vjust = 2),
+              axis.ticks = element_blank(), 
+              axis.text = element_blank(),
+              axis.title = element_blank())
+    }
+  })
+  
+  output$statdesc2 = renderPlot({
+    if ( is.null(input$fichier) | length(input$var_qual_statdesc21) == 0){
+      return(NULL)
+    }else{
+      if ( length(levels( tableau1()[[input$var_qual_statdesc21]] )) > 20 ){return(NULL)}else{plot_statdesc2()}
+    }
+  })
+  
+  output$format_stat2 = renderUI({
+    if (is.null(input$fichier) | length(input$var_qual_statdesc21) == 0) {}
+    else {radioButtons('format2', 'Document format', c('PDF', 'PNG', 'JPEG', 'TIFF', 'BMP'),inline = TRUE)}
+  })
+  
+  output$download_stat2 = renderUI({
+    if (is.null(input$fichier) | length(input$var_qual_statdesc21) == 0) {}
+    else {downloadButton("download_stat21", label = "Download table")}
+  })
+  
+  output$download_stat21 <- downloadHandler(
+    
+    filename = function() {
+      paste('my-table', sep = '.', switch(
+        input$format2, PDF = 'pdf', PNG = 'png', JPEG = 'jpeg', TIFF = 'tiff', BMP = 'bmp'
+      ))
+    },
+    
+    content = function(file) {
+      ggsave(file,plot_statdesc2(), width = 7, height = 6)
+    }
+    
+  )  
+  
+  #First message after load file
+  observe({
+    session$sendCustomMessage(type = 'firstmessage',
+                              message = list("Attention : assurez vous que le fichier .csv ou .txt qui sera charge a ete nettoye"))
+  })
+  
+  
+  
+}
+  
+  
+)
+```
