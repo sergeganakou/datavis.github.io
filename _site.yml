@@ -1,6 +1,6 @@
-name: "my-website"
+name: "DataVisualization"
 navbar:
-  title: "My Website"
+  title: "DataVisualization"
   left:
     - text: "Home"
       href: index.html

@@ -1,5 +1,5 @@
 ---
-title: "Untitled"
+title: "DataVisualization"
 runtime: shiny
 output: flexdashboard::flex_dashboard
 ---
