@@ -1,7 +1,7 @@
 ---
 title: "DataVisualization"
 runtime: shiny
-output: flexdashboard::flex_dashboard
+#output: flexdashboard::flex_dashboard
 ---
 
 
